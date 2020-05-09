@@ -8,10 +8,14 @@
 index.js is a simple script that runs in node.js environment. 
 It has no other dependencies.
 
-You will need to manually edit plaintext and/or ciphertext constants near top of file to use.
-It currently encrypts the example test from the above referenced Wikipedia article, 
-"Aide-toi, le ciel t'aidera".
 
 To run, type:
-node index.js
+node index.js <cmd> <key> <text>
+where command is one of: enc, dec, or test. Param is the text to be encrypted or decrypted.
+
+Examples:
+node index.js test
+node index.js enc "secretkey" "Happy Mother's Day"
+node index.js dec "FELIX MARIE DELASTELLE" "FMJFVOISSUFTFPUFEQQC"
+
 

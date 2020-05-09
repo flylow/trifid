@@ -4,11 +4,12 @@
 ** See an excellent procedural description of Trifid at:
 ** https://en.wikipedia.org/wiki/Trifid_cipher, captured May 4th, 2020
 ** Not intended for modern encryption use for valuable data, for educational use only
-** G. Wilson
+** 
 */
-const key = "FELIX MARIE DELASTELLE";
-const plaintext = "Aide-toi, le ciel t'aidera";
-const ciphertext = "";  //"FMJFVOISSUFTFPUFEQQC";
+
+let keyTmp = "FELIX MARIE DELASTELLE";
+let plaintext = "Aide-toi, le ciel t'aidera";
+let ciphertext = "";  //"FMJFVOISSUFTFPUFEQQC";
 
 // Define a character set for experimenting with Trifid
 const alphabet27 = "ABCDEFGHIJKLMNOPQRSTUVWXYZ+"; // Standard, a set of 27 chars
@@ -36,6 +37,8 @@ let cipherObj = {
 		key: "", 
 		mixedAlphabet: ""
 				};
+
+let isNode=false, isBrowser = false; // Will be determined by getEnv function
 
 // cube will become a dim^3 matrix to hold allowed alphabetic characters in an indexed fashion
 // Be aware (or beware) of index starting at zero instead of one as in manual procedure
@@ -133,9 +136,9 @@ const padplus = function(str, c = "+", gs = configObj.groupsize) {
 };
 
 const setup = function() {
-	let keyUC = checkChars(key);
-	cipherObj.key = keyUC;
-	console.log("Cleaned-up key is: ", keyUC);	
+	let key = checkChars(keyTmp);
+	cipherObj.key = key;
+	console.log("Cleaned-up key is: ", key);	
 	
 	if (plaintext) {
 		let pt = checkChars(plaintext);
@@ -151,7 +154,7 @@ const setup = function() {
 		console.log("Cleaned-up ciphertext is: ", cipherObj.ciphertext);
 	};	
 	
-	let keyAlpha = keyUC + configObj.alphabet;
+	let keyAlpha = key + configObj.alphabet;
 	let ka = removeDupes(keyAlpha);	
 	cipherObj.mixedAlphabet = ka;
 	console.log("Mixed alphabet is: ", cipherObj.mixedAlphabet);
@@ -218,9 +221,7 @@ const enc = function() {
 	console.log("ciphertext from given plaintext is: " + cipherObj.ciphertextFromGivenPlaintext,"\n\n");	
 };
 
-enc(); // TODO
-
-const dencSegment = function(cipherSegment) {
+const decSegment = function(cipherSegment) {
 	//console.log("cipherSegment = ", cipherSegment);
 	// A two-dimensional matrix for holding chunks of the intermediate cipher
 	let groupmat = [];
@@ -232,7 +233,7 @@ const dencSegment = function(cipherSegment) {
 	for (let j=0; j<cipherSegment.length; j++) {
 		charCode = encArray[configObj.alphabet.indexOf(cipherSegment.charAt(j))];
 		if (!charCode) {
-			throw "Error, character not found in dencSegment";
+			throw "Error, character not found in decSegment";
 		};	
 		//console.log("cipherSegment.charCodeAt(j)="+cipherSegment.charCodeAt(j)+ ", charCode = ",charCode);		
 		charCodeArray = charCode.split("");
@@ -242,14 +243,14 @@ const dencSegment = function(cipherSegment) {
 				row++;
 			};
 			if (row >= 3) {
-				console.error("Error in dencSegment, row too large");
-				throw("Error in dencSegment, row too large");
+				console.error("Error in decSegment, row too large");
+				throw("Error in decSegment, row too large");
 				
 			};
 			groupmat[row][col++] = charCodeArray[n];
 		}
 	};
-	//console.log("dencSegment groupmat = ", groupmat);
+	//console.log("decSegment groupmat = ", groupmat);
 	let cntr = 0;
 	for (let j=0; j<configObj.groupsize; j++) {
 		for (let i=0; i<3; i++) {
@@ -262,15 +263,15 @@ const dencSegment = function(cipherSegment) {
 		let row = segtextCodes[i+1]-1;
 		let col = segtextCodes[i+2]-1;
 				//console.log("i=",i,", layer=",layer,", row=",row,", col=",col);
-		let dencChar = cube[layer][row][col];
-		//console.log("dencChar = ", dencChar);
-		segtext += dencChar;
+		let decChar = cube[layer][row][col];
+		//console.log("decChar = ", decChar);
+		segtext += decChar;
 	};
 	//console.log("segtext = ", segtext);
 	return segtext;
 };
 
-const denc = function() {
+const dec = function() {
 	setup();
 	let ct = "";
 	if (!cipherObj.ciphertext && !cipherObj.ciphertextFromGivenPlaintext) {
@@ -279,16 +280,16 @@ const denc = function() {
 	} else {
 		if (cipherObj.ciphertext) {
 			ct = cipherObj.ciphertext;
-			console.log("Will denc given ciphertext:",ct);
+			console.log("Will dec given ciphertext:",ct);
 		} else {
 			ct = cipherObj.ciphertextFromGivenPlaintext; // TODO, continue to verify round-trip?
-			console.log("Will continue round-trip to denc newly encrypted text: ",ct);			
+			console.log("Will continue round-trip to dec newly encrypted text: ",ct);			
 		};
 	};
-	console.log("Will denc: ",ct);
+	console.log("Will dec: ",ct);
 	let tmppt = "", pt = "";
 	for (let i=0; i<ct.length; i+=configObj.groupsize) {
-		tmppt = dencSegment(ct.substr(i, configObj.groupsize));
+		tmppt = decSegment(ct.substr(i, configObj.groupsize));
 		//console.log("tmppt = ", tmppt);
 		pt += tmppt;
 	};
@@ -299,28 +300,68 @@ const denc = function() {
 		cipherObj.plaintextFromGeneratedCiphertext = pt;
 		console.log("Round-trip plaintext:\n",pt);
 	}
-	////console.log("In denc, length plaintext=" + pt.length + ", plaintext=", pt);
+	////console.log("In dec, length plaintext=" + pt.length + ", plaintext=", pt);
 	return pt;	
 };
 
-let ptext = denc();
+const displayResults = function() {
+	console.log("\n\n\n		----Results Summary----");
+	if (plaintext) {
+		console.log("--Given plaintext:\n",plaintext);
+		console.log("--ciphertext from given plaintext:\n", cipherObj.ciphertextFromGivenPlaintext);
+		console.log("--plaintext after roundtrip (only if no ciphertext given):\n", cipherObj.plaintextFromGeneratedCiphertext);
+	};
 
-// Results summary
-console.log("\n\n\n		----Results Summary----");
-if (plaintext) {
-	console.log("--Given plaintext:\n",plaintext);
-	console.log("--ciphertext from given plaintext:\n", cipherObj.ciphertextFromGivenPlaintext);
-	console.log("--plaintext after roundtrip (only if no ciphertext given):\n", cipherObj.plaintextFromGeneratedCiphertext);
+	if (ciphertext) {
+		console.log("\n--Given ciphertext:\n",ciphertext);
+		console.log("--text from given ciphertext(if given):\n",cipherObj.plaintextFromGivenCiphertext);
+	};
 };
 
-if (ciphertext) {
-	console.log("\n--Given ciphertext:\n",ciphertext);
-	console.log("--text from given ciphertext(if given):\n",cipherObj.plaintextFromGivenCiphertext);
+// If in node, process command line args
+const handleCmd = function() {
+	let cmdaction = process.argv[2];
+	let arg2 = process.argv[3];
+	let arg3 = process.argv[4];
+	if (cmdaction === 'enc') {
+		keyTmp = arg2;
+		plaintext = arg3;
+		ciphertext = "";
+		return true;
+	} else if (cmdaction === 'dec') {
+		keyTmp = arg2;
+		plaintext = "";
+		ciphertext = arg3;
+		return true;
+	} else if (cmdaction === 'test') {
+		plaintext = "Aide-toi, le ciel t'aidera";
+		ciphertext = "FMJFVOISSUFTFPUFEQQC";
+		return true;
+	} else {
+		console.log("No (or invalid) parameters. Use 'test', or 'enc <key> <str>' or 'dec <key> <str>'");
+		return false;
+	}
 };
 
-// tests:
-// Test simple deciphering with 27 character alphabet after Delastelle.
-// Test simple enciphering with same.
-// Set one plaintext and a different ciphertext inputs, then run to check correct
+// Determine the environment and run user's commands
+const doCmds = function() {
+	isBrowser = typeof window !== 'undefined'
+		&& ({}).toString.call(window) === '[object Window]';
+	isNode = typeof global !== "undefined" 
+		&& ({}).toString.call(global) === '[object global]';
+	console.log("isBrowser = ",isBrowser,", isNode = ",isNode);
+	// If in node, get command line args and execute
+	if (isNode) {
+		if (handleCmd()) {
+			enc();
+			dec();
+			displayResults();
+		};
+	};
+
+};
+
+doCmds();
+
 
 
