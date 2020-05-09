@@ -4,11 +4,12 @@
 ** See an excellent procedural description of Trifid at:
 ** https://en.wikipedia.org/wiki/Trifid_cipher, captured May 4th, 2020
 ** Not intended for modern encryption use for valuable data, for educational use only
-** G. Wilson
+** flylow at edgewww com
 */
-const key = "FELIX MARIE DELASTELLE";
-const plaintext = "Aide-toi, le ciel t'aidera";
-const ciphertext = "";  //"FMJFVOISSUFTFPUFEQQC";
+
+let key = "FELIX MARIE DELASTELLE";
+let plaintext = "Aide-toi, le ciel t'aidera";
+let ciphertext = "";  //"FMJFVOISSUFTFPUFEQQC";
 
 // Define a character set for experimenting with Trifid
 const alphabet27 = "ABCDEFGHIJKLMNOPQRSTUVWXYZ+"; // Standard, a set of 27 chars
@@ -36,6 +37,8 @@ let cipherObj = {
 		key: "", 
 		mixedAlphabet: ""
 				};
+
+let isNode=false, isBrowser = false; // Will be determined by getEnv function
 
 // cube will become a dim^3 matrix to hold allowed alphabetic characters in an indexed fashion
 // Be aware (or beware) of index starting at zero instead of one as in manual procedure
@@ -133,9 +136,9 @@ const padplus = function(str, c = "+", gs = configObj.groupsize) {
 };
 
 const setup = function() {
-	let keyUC = checkChars(key);
-	cipherObj.key = keyUC;
-	console.log("Cleaned-up key is: ", keyUC);	
+	let key = checkChars(key);
+	cipherObj.key = key;
+	console.log("Cleaned-up key is: ", key);	
 	
 	if (plaintext) {
 		let pt = checkChars(plaintext);
@@ -151,7 +154,7 @@ const setup = function() {
 		console.log("Cleaned-up ciphertext is: ", cipherObj.ciphertext);
 	};	
 	
-	let keyAlpha = keyUC + configObj.alphabet;
+	let keyAlpha = key + configObj.alphabet;
 	let ka = removeDupes(keyAlpha);	
 	cipherObj.mixedAlphabet = ka;
 	console.log("Mixed alphabet is: ", cipherObj.mixedAlphabet);
@@ -217,8 +220,6 @@ const enc = function() {
 	};
 	console.log("ciphertext from given plaintext is: " + cipherObj.ciphertextFromGivenPlaintext,"\n\n");	
 };
-
-enc(); // TODO
 
 const dencSegment = function(cipherSegment) {
 	//console.log("cipherSegment = ", cipherSegment);
@@ -303,24 +304,64 @@ const denc = function() {
 	return pt;	
 };
 
-let ptext = denc();
+const displayResults = function() {
+	console.log("\n\n\n		----Results Summary----");
+	if (plaintext) {
+		console.log("--Given plaintext:\n",plaintext);
+		console.log("--ciphertext from given plaintext:\n", cipherObj.ciphertextFromGivenPlaintext);
+		console.log("--plaintext after roundtrip (only if no ciphertext given):\n", cipherObj.plaintextFromGeneratedCiphertext);
+	};
 
-// Results summary
-console.log("\n\n\n		----Results Summary----");
-if (plaintext) {
-	console.log("--Given plaintext:\n",plaintext);
-	console.log("--ciphertext from given plaintext:\n", cipherObj.ciphertextFromGivenPlaintext);
-	console.log("--plaintext after roundtrip (only if no ciphertext given):\n", cipherObj.plaintextFromGeneratedCiphertext);
+	if (ciphertext) {
+		console.log("\n--Given ciphertext:\n",ciphertext);
+		console.log("--text from given ciphertext(if given):\n",cipherObj.plaintextFromGivenCiphertext);
+	};
 };
 
-if (ciphertext) {
-	console.log("\n--Given ciphertext:\n",ciphertext);
-	console.log("--text from given ciphertext(if given):\n",cipherObj.plaintextFromGivenCiphertext);
+// If in node, process command line args
+const handleCmd = function() {
+	let cmdaction = process.argv[2];
+	let arg2 = process.argv[3];
+	if (cmdaction === 'enc') {
+		plaintext = arg2;
+		ciphertext = "";
+		return true;
+	} else if (cmdaction === 'denc') {
+		plaintext = "";
+		ciphertext = arg2;
+		return true;
+	} else if (cmdaction === 'test') {
+		plaintext = "Aide-toi, le ciel t'aidera";
+		ciphertext = "FMJFVOISSUFTFPUFEQQC";
+		return true;
+	} else {
+		console.log("No (or invalid) parameters. Use 'test', or 'enc <str>' or 'denc <str>'");
+		return false;
+	}
 };
 
-// tests:
-// Test simple deciphering with 27 character alphabet after Delastelle.
-// Test simple enciphering with same.
-// Set one plaintext and a different ciphertext inputs, then run to check correct
+// Determine the environment and run user's commands
+const doCmds = function() {
+	isBrowser = typeof window !== 'undefined'
+		&& ({}).toString.call(window) === '[object Window]';
+
+	isNode = typeof global !== "undefined" 
+		&& ({}).toString.call(global) === '[object global]';
+
+	console.log("isBrowser = ",isBrowser,", isNode = ",isNode);
+
+	// If in node, get command line args and execute
+	if (isNode) {
+		if (handleCmd()) {
+			enc();
+			denc();
+			displayResults();
+		};
+	};
+
+};
+
+doCmds();
+
 
 
