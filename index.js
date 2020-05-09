@@ -7,7 +7,7 @@
 ** 
 */
 
-const keyTmp = "FELIX MARIE DELASTELLE";
+let keyTmp = "FELIX MARIE DELASTELLE";
 let plaintext = "Aide-toi, le ciel t'aidera";
 let ciphertext = "";  //"FMJFVOISSUFTFPUFEQQC";
 
@@ -322,20 +322,23 @@ const displayResults = function() {
 const handleCmd = function() {
 	let cmdaction = process.argv[2];
 	let arg2 = process.argv[3];
+	let arg3 = process.argv[4];
 	if (cmdaction === 'enc') {
-		plaintext = arg2;
+		keyTmp = arg2;
+		plaintext = arg3;
 		ciphertext = "";
 		return true;
 	} else if (cmdaction === 'dec') {
+		keyTmp = arg2;
 		plaintext = "";
-		ciphertext = arg2;
+		ciphertext = arg3;
 		return true;
 	} else if (cmdaction === 'test') {
 		plaintext = "Aide-toi, le ciel t'aidera";
 		ciphertext = "FMJFVOISSUFTFPUFEQQC";
 		return true;
 	} else {
-		console.log("No (or invalid) parameters. Use 'test', or 'enc <str>' or 'dec <str>'");
+		console.log("No (or invalid) parameters. Use 'test', or 'enc <key> <str>' or 'dec <key> <str>'");
 		return false;
 	}
 };
