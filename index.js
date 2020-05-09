@@ -4,10 +4,10 @@
 ** See an excellent procedural description of Trifid at:
 ** https://en.wikipedia.org/wiki/Trifid_cipher, captured May 4th, 2020
 ** Not intended for modern encryption use for valuable data, for educational use only
-** flylow at edgewww com
+** 
 */
 
-let key = "FELIX MARIE DELASTELLE";
+const keyTmp = "FELIX MARIE DELASTELLE";
 let plaintext = "Aide-toi, le ciel t'aidera";
 let ciphertext = "";  //"FMJFVOISSUFTFPUFEQQC";
 
@@ -136,7 +136,7 @@ const padplus = function(str, c = "+", gs = configObj.groupsize) {
 };
 
 const setup = function() {
-	let key = checkChars(key);
+	let key = checkChars(keyTmp);
 	cipherObj.key = key;
 	console.log("Cleaned-up key is: ", key);	
 	
@@ -221,7 +221,7 @@ const enc = function() {
 	console.log("ciphertext from given plaintext is: " + cipherObj.ciphertextFromGivenPlaintext,"\n\n");	
 };
 
-const dencSegment = function(cipherSegment) {
+const decSegment = function(cipherSegment) {
 	//console.log("cipherSegment = ", cipherSegment);
 	// A two-dimensional matrix for holding chunks of the intermediate cipher
 	let groupmat = [];
@@ -233,7 +233,7 @@ const dencSegment = function(cipherSegment) {
 	for (let j=0; j<cipherSegment.length; j++) {
 		charCode = encArray[configObj.alphabet.indexOf(cipherSegment.charAt(j))];
 		if (!charCode) {
-			throw "Error, character not found in dencSegment";
+			throw "Error, character not found in decSegment";
 		};	
 		//console.log("cipherSegment.charCodeAt(j)="+cipherSegment.charCodeAt(j)+ ", charCode = ",charCode);		
 		charCodeArray = charCode.split("");
@@ -243,14 +243,14 @@ const dencSegment = function(cipherSegment) {
 				row++;
 			};
 			if (row >= 3) {
-				console.error("Error in dencSegment, row too large");
-				throw("Error in dencSegment, row too large");
+				console.error("Error in decSegment, row too large");
+				throw("Error in decSegment, row too large");
 				
 			};
 			groupmat[row][col++] = charCodeArray[n];
 		}
 	};
-	//console.log("dencSegment groupmat = ", groupmat);
+	//console.log("decSegment groupmat = ", groupmat);
 	let cntr = 0;
 	for (let j=0; j<configObj.groupsize; j++) {
 		for (let i=0; i<3; i++) {
@@ -263,15 +263,15 @@ const dencSegment = function(cipherSegment) {
 		let row = segtextCodes[i+1]-1;
 		let col = segtextCodes[i+2]-1;
 				//console.log("i=",i,", layer=",layer,", row=",row,", col=",col);
-		let dencChar = cube[layer][row][col];
-		//console.log("dencChar = ", dencChar);
-		segtext += dencChar;
+		let decChar = cube[layer][row][col];
+		//console.log("decChar = ", decChar);
+		segtext += decChar;
 	};
 	//console.log("segtext = ", segtext);
 	return segtext;
 };
 
-const denc = function() {
+const dec = function() {
 	setup();
 	let ct = "";
 	if (!cipherObj.ciphertext && !cipherObj.ciphertextFromGivenPlaintext) {
@@ -280,16 +280,16 @@ const denc = function() {
 	} else {
 		if (cipherObj.ciphertext) {
 			ct = cipherObj.ciphertext;
-			console.log("Will denc given ciphertext:",ct);
+			console.log("Will dec given ciphertext:",ct);
 		} else {
 			ct = cipherObj.ciphertextFromGivenPlaintext; // TODO, continue to verify round-trip?
-			console.log("Will continue round-trip to denc newly encrypted text: ",ct);			
+			console.log("Will continue round-trip to dec newly encrypted text: ",ct);			
 		};
 	};
-	console.log("Will denc: ",ct);
+	console.log("Will dec: ",ct);
 	let tmppt = "", pt = "";
 	for (let i=0; i<ct.length; i+=configObj.groupsize) {
-		tmppt = dencSegment(ct.substr(i, configObj.groupsize));
+		tmppt = decSegment(ct.substr(i, configObj.groupsize));
 		//console.log("tmppt = ", tmppt);
 		pt += tmppt;
 	};
@@ -300,7 +300,7 @@ const denc = function() {
 		cipherObj.plaintextFromGeneratedCiphertext = pt;
 		console.log("Round-trip plaintext:\n",pt);
 	}
-	////console.log("In denc, length plaintext=" + pt.length + ", plaintext=", pt);
+	////console.log("In dec, length plaintext=" + pt.length + ", plaintext=", pt);
 	return pt;	
 };
 
@@ -326,7 +326,7 @@ const handleCmd = function() {
 		plaintext = arg2;
 		ciphertext = "";
 		return true;
-	} else if (cmdaction === 'denc') {
+	} else if (cmdaction === 'dec') {
 		plaintext = "";
 		ciphertext = arg2;
 		return true;
@@ -335,7 +335,7 @@ const handleCmd = function() {
 		ciphertext = "FMJFVOISSUFTFPUFEQQC";
 		return true;
 	} else {
-		console.log("No (or invalid) parameters. Use 'test', or 'enc <str>' or 'denc <str>'");
+		console.log("No (or invalid) parameters. Use 'test', or 'enc <str>' or 'dec <str>'");
 		return false;
 	}
 };
@@ -344,17 +344,14 @@ const handleCmd = function() {
 const doCmds = function() {
 	isBrowser = typeof window !== 'undefined'
 		&& ({}).toString.call(window) === '[object Window]';
-
 	isNode = typeof global !== "undefined" 
 		&& ({}).toString.call(global) === '[object global]';
-
 	console.log("isBrowser = ",isBrowser,", isNode = ",isNode);
-
 	// If in node, get command line args and execute
 	if (isNode) {
 		if (handleCmd()) {
 			enc();
-			denc();
+			dec();
 			displayResults();
 		};
 	};
